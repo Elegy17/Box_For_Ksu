@@ -1,0 +1,26 @@
+15:19 [Info]: 执行命令: /data/adb/box/scripts/box.tool webroot
+15:19 [Info]: 已生成/更新 WebUI 页面: /data/adb/modules/box_for_root/webroot/index.html → http://0.0.0.0:9090/ui/ (内核: mihomo)
+----------------------------------------
+18:00 [Info]: 执行命令: /data/adb/box/scripts/box.tool geosub
+18:00 [Info]: mihomo 开始更新 1 个订阅 → Sun Mar  1 18:00:00 CST 2026
+18:00 [Info]: --> 正在处理订阅 #0: 魔戒
+18:00 [Info]: 开始下载: https://msub.xn--m7r52rosihxm.com/***
+18:00 [Debug]: 保存到: /data/adb/box/mihomo/proxy_provider/魔戒
+18:00 [Debug]: 使用 User-Agent: ClashMeta
+18:00 [Info]: 下载成功
+18:00 [Debug]: 文件大小: 218934 字节
+18:00 [Debug]: 文件路径: /data/adb/box/mihomo/proxy_provider/魔戒
+18:00 [Debug]: 标准订阅格式, 正在提取 proxies 并覆盖原文件...
+18:00 [Debug]: 尝试提取 proxies 字段...
+18:00 [Debug]: 提取到 34 个代理节点
+18:00 [Info]: 订阅 #0 (标准格式) 已处理并保存
+18:00 [Info]: 成功更新 1 / 1 个订阅
+18:00 [Info]: 正在更新 config.yaml 的 proxy-providers 配置...
+18:00 [Debug]: 开始更新 proxy-providers 配置项...
+18:00 [Debug]: 添加 provider: 魔戒 -> proxy_provider/魔戒
+18:00 [Debug]: proxy-providers 配置构建完成
+18:00 [Info]: proxy-providers 配置更新成功
+18:00 [Info]: 更新订阅于 2026-03-01 18:00
+18:00 [Info]: /data/adb/box/mihomo/config.yaml 检查通过
+18:00 [Info]: mihomo 配置重载成功
+----------------------------------------

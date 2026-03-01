@@ -1,0 +1,29 @@
+Asia/Shanghai Sun Mar  1 15:19:26 CST 2026
+中国电信,中国移动 NR_SA,NR_SA
+version=1.2.6(a53b38c)(arm64-v8a)
+━━━━━━━━━━━━━━━━━━
+15:19 [Info]: 启动服务
+15:19 [Info]: 当前 /data/adb/ksu/bin/busybox v1.36.1.1
+15:19 [Info]: 使用内核 /data/adb/box/bin/mihomo。
+15:19 [Info]: Mihomo Meta v1.19.20 android arm64 with go1.25.7 Sun Feb  8 14:03:38 UTC 2026
+Use tags: with_gvisor
+15:19 [Info]: 删除并备份日志文件
+15:19 [Debug]: crond 已启用
+15:19 [Debug]: 定时任务间隔: 0 0,6,12,18 * * *.
+15:19 [Info]: mihomo geox 更新: false.
+15:19 [Info]: mihomo 订阅更新: true.
+15:19 [Info]: 可用内核列表: [ mihomo sing-box xray v2fly hysteria ]
+15:19 [Info]: 选择内核: mihomo，启动服务。
+15:19 [Info]: 检测到配置 /data/adb/box/mihomo/config.yaml
+15:19 [Info]: /data/adb/box/mihomo/config.yaml 已存在 [tun] 配置
+15:19 [Info]: 操作: 更新TUN模式UID列表
+15:19 [Info]: 模式: core
+15:19 [Debug]: (核心模式, 所有应用透明代理)
+15:19 [Debug]: 增强模式: fake-ip, fake-ip 段: 198.18.0.1/16, fake-ip6 段: fc00::/18, DNS 端口: 1053, 模式: Rule
+15:19 [Info]: TUN 设备: (Meta)
+15:19 [Info]: iptables -w 100 + ip6tables -w 100
+15:19 [Info]: 使用 Tun: tcp + udp。
+15:19 [Info]: iptables TUN 规则创建完成。
+15:19 [Debug]: 启用 IPv6。
+15:19 [Info]: ip6tables TUN 规则创建完成。
+15:19 [Info]: mihomo 已连接。
