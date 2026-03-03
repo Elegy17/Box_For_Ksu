@@ -1,3 +1,0 @@
-# root 的定时任务
-0 0,6,12,18 * * * /data/adb/box/scripts/box.tool geosub
-# cron tasks for root

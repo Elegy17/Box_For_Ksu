@@ -7,8 +7,8 @@ p: &p {type: http, interval: 86400, health-check: {enable: true, url: "https://w
 port: 7890
 socks-port: 7891
 mixed-port: 7892
-redir-port: 7893
-tproxy-port: 7894
+redir-port: 9797
+tproxy-port: 9898
 ipv6: true
 # interface-name: tun0  # 如果需要配合VPN嵌套使用，需使用此功能
 mode: Rule
@@ -24,6 +24,26 @@ keep-alive-idle: 600
 profile:
   store-selected: true
   store-fake-ip: true
+
+# 全局 User-Agent 伪装
+experimental:
+  http-headers:
+    request:
+      - name: "User-Agent"
+        value: "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36"
+      - name: "Accept-Language"
+        value: "en-US,en;q=0.9"
+
+# GEOIP 数据模式
+geodata-mode: true
+geodata-loader: standard
+geo-auto-update: false
+geo-update-interval: 24
+geox-url:
+  geoip: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
+  geosite: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
+  mmdb: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb"
+  asn: "https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb"
 
 # 控制面板
 external-controller: 0.0.0.0:9090
@@ -47,11 +67,12 @@ dns:
   fake-ip-range: 198.18.0.1/16 # 198.18.0.1/16 28.0.0.1/8
   fake-ip-filter-mode: blacklist # blacklist/whitelist
   fake-ip-filter:
-    - "rule-set:Fake-IP-Filter"
-    - "rule-set:private_domain,cn_domain"
-    - '*.lan'
-    - '*.ntp.*'
-    - '*.local'
+    - "RULE-SET:Fake-IP-Filter"
+    - "RULE-SET:private_domain,cn_domain"
+    - "RULE-SET:GoogleFCM_域"
+    - "+.mtalk.google.com"
+    - "+.lan"
+    - "+.local"
   default-nameserver: # 默認DNS解析
     - tls://223.5.5.5
     - tls://223.6.6.6
@@ -79,8 +100,6 @@ dns:
 # 域名嗅探
 sniffer:
   enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
   sniff:
     HTTP:
       ports: [80, 8080-8880]
@@ -92,9 +111,15 @@ sniffer:
   force-domain:
     - "+.v2ex.com"
   skip-domain:
+    - "Mijia Cloud"
+    - "localhost"
+    - "+.lan"
+    - "+.local"
     - "+.qq.com"
     - "+.wechatapp.com"
     - "+.wechat.com"
+  skip-src-address:
+    - "192.168.1.0/24"
 
 # 入站
 tun:
@@ -113,9 +138,14 @@ tun:
 # 出站
 proxy-providers:
   魔戒:
-    <<: *p
     type: file
     path: proxy_provider/魔戒
+    health-check:
+      enable: true
+      url: https://cp.cloudflare.com
+      interval: 300
+      timeout: 1000
+      tolerance: 100
 
 # 代理组
 proxies:
@@ -129,16 +159,37 @@ proxy-groups:
   - {name: 負載均衡, type: load-balance, include-all-providers: true, strategy: consistent-hashing, icon: https://cdn.jsdelivr.net/gh/Elegy17/NetFlowNest@main/Mihomo/icon/Load-Balancing.svg}
   - {name: 故障轉移, type: fallback, include-all-providers: true, icon: https://cdn.jsdelivr.net/gh/Elegy17/NetFlowNest@main/Mihomo/icon/Back.png}
   - {name: FCM推送, type: select, proxies: [國內直連, 默認代理], icon: https://cdn.jsdelivr.net/gh/Elegy17/NetFlowNest@main/Mihomo/icon/Mail.png}
-  - {name: 廣告過濾, type: select, proxies: [REJECT-DROP, PASS], icon: https://cdn.jsdelivr.net/gh/Elegy17/NetFlowNest@main/Mihomo/icon/AD-Blocker.png}
+  - {name: 廣告過濾, type: select, proxies: [REJECT-DROP, REJECT, PASS, DNS_Hijack], icon: https://cdn.jsdelivr.net/gh/Elegy17/NetFlowNest@main/Mihomo/icon/AD-Blocker.png}
   - {name: 漏網之魚, type: select, proxies: [默認代理, 國內直連], icon: https://cdn.jsdelivr.net/gh/Elegy17/NetFlowNest@main/Mihomo/icon/Final.png}
+
+# 规则集锚点
+rule-anchor:
+  IPCIDR: &IPCIDR { type: http, behavior: ipcidr, format: mrs, interval: 86400, proxy: DIRECT, size-limit: 0}
+  Domain: &Domain { type: http, behavior: domain, format: mrs, interval: 86400, proxy: DIRECT, size-limit: 0}
+  Classical: &Classical { type: http, behavior: classical, format: yaml, interval: 86400, proxy: DIRECT, size-limit: 0}
+  Local: &local { type: file, behavior: classical, format: text, interval: 86400}
+
+# 规则集
+rule-providers:
+  Fake-IP-Filter: { <<: *Domain, path: ./Rule/Fake-IP-Filter.mrs, url: "https://ghfast.top/github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/fakeip-filter.mrs"}
+  proxy_domain: { <<: *Domain, path: ./Rule/proxy_domain.mrs, url: "https://ghfast.top/github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/proxy.mrs"}
+  private_domain: { <<: *Domain, path: ./Rule/private_domain.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/private.mrs"}
+  cn_domain: { <<: *Domain, path: ./Rule/cn_domain.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/cn.mrs"}
+  秋风广告规则: { <<: *Domain, path: ./Rule/AWAvenue-Ads-Rule-Clash.mrs, url: "https://github.boki.moe/https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.mrs"}
+  AdBlock-DNS-Filters: { <<: *Domain, path: ./Rule/AdBlock-DNS-Filters.mrs, url: "https://gcore.jsdelivr.net/gh/217heidai/adblockfilters@main/rules/adblockmihomo.mrs"}
+  AdRules: { <<: *Domain, path: ./Rule/AdRules.mrs, url: "https://gitlab.com/cats-team/adrules/-/raw/main/adrules-mihomo.mrs"}
+  GoogleFCM_域: {<<: *Domain, path: ./Rule/GoogleFCM.mrs, url: "https://cdn.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/GoogleFCM/GoogleFCM_OCD_Domain.mrs" }
+
+  GoogleFCM_IP: { <<: *IPCIDR, path: ./Rule/GoogleFCM_IP.mrs, url: "https://cdn.jsdelivr.net/gh/GitMetaio/rule@master/rule/Clash/GoogleFCM/GoogleFCM_OCD_IP.mrs" }
+  cn_ip: { <<: *IPCIDR, path: ./Rule/cn_ip.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cn.mrs"}
+  private_ip: { <<: *IPCIDR, path: ./Rule/private_ip.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/private.mrs"}
 
 # 路由规则
 rules:
   - DST-PORT,53,DNS_Hijack
-  - DST-PORT,5228,FCM推送
+  - SUB-RULE,(OR,((NETWORK,TCP),(NETWORK,UDP))),FCM
   - SUB-RULE,(OR,((NETWORK,TCP),(NETWORK,UDP))),AD-BLOCKING
   - RULE-SET,proxy_domain,默認代理
-  - DOMAIN-REGEX,^.*mtalk.google.com,FCM推送
   - OR,((RULE-SET,cn_ip),(RULE-SET,cn_domain),(RULE-SET,private_ip),(RULE-SET,private_domain)),國內直連
   - MATCH,漏網之魚
 
@@ -148,21 +199,8 @@ sub-rules:
     - RULE-SET,AdRules,廣告過濾
     - RULE-SET,AdBlock-DNS-Filters,廣告過濾
     - RULE-SET,秋风广告规则,廣告過濾
-
-# 规则集
-rule-anchor:
-  ipcidr: &ipcidr { type: http, behavior: ipcidr, format: mrs, interval: 86400, proxy: DIRECT, size-limit: 0}
-  domain: &domain { type: http, behavior: domain, format: mrs, interval: 86400, proxy: DIRECT, size-limit: 0}
-  classical: &classical { type: http, behavior: classical, format: yaml, interval: 86400, proxy: DIRECT, size-limit: 0}
-  local: &local { type: file, behavior: classical, format: text, interval: 86400}
-rule-providers:
-  Fake-IP-Filter: { <<: *domain, path: ./Rule/Fake-IP-Filter.mrs, url: "https://ghfast.top/github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/fakeip-filter.mrs"}
-  proxy_domain: { <<: *domain, path: ./Rule/proxy_domain.mrs, url: "https://ghfast.top/github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/proxy.mrs"}
-  private_domain: { <<: *domain, path: ./Rule/private_domain.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/private.mrs"}
-  cn_domain: { <<: *domain, path: ./Rule/cn_domain.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/cn.mrs"}
-  秋风广告规则: { <<: *domain, path: ./Rule/AWAvenue-Ads-Rule-Clash.mrs, url: "https://github.boki.moe/https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.mrs"}
-  AdBlock-DNS-Filters: { <<: *domain, path: ./Rule/AdBlock-DNS-Filters.mrs, url: "https://gcore.jsdelivr.net/gh/217heidai/adblockfilters@main/rules/adblockmihomo.mrs"}
-  AdRules: { <<: *domain, path: ./Rule/AdRules.mrs, url: "https://gitlab.com/cats-team/adrules/-/raw/main/adrules-mihomo.mrs"}
-
-  cn_ip: { <<: *ipcidr, path: ./Rule/cn_ip.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cn.mrs"}
-  private_ip: { <<: *ipcidr, path: ./Rule/private_ip.mrs, url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/private.mrs"}
+  FCM:
+    - DST-PORT,5228,FCM推送
+    - DOMAIN-REGEX,^.*mtalk.google.com,FCM推送
+    - RULE-SET,GoogleFCM_域,FCM推送
+    - RULE-SET,GoogleFCM_IP,FCM推送

@@ -1,0 +1,3 @@
+01:33 [Info]: 执行命令: /data/adb/box/scripts/box.tool webroot
+01:33 [Info]: 已生成/更新 WebUI 页面: /data/adb/modules/box_for_root/webroot/index.html → http://0.0.0.0:9090/ui/ (内核: mihomo)
+----------------------------------------

@@ -1,0 +1,242 @@
+# 基本配置
+mixed-port: 7890
+redir-port: 9797
+tproxy-port: 9898
+ipv6: true
+mode: Rule
+allow-lan: true
+unified-delay: true
+tcp-concurrent: true
+log-level: silent
+bind-address: "*"
+find-process-mode: always
+global-client-fingerprint: chrome
+
+external-controller: 127.0.0.1:9090
+external-ui-url: "https://v6.gh-proxy.com/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages-no-fonts.zip"
+external-ui: "dashboard"
+secret: ""
+
+# 订阅健康检查
+p: &p
+  type: http
+  interval: 21600
+  health-check:
+    enable: true
+    url: 'https://www.gstatic.com/generate_204'
+    interval: 1800
+    timeout: 5000
+  exclude-filter: '(?i)官网|邀请|到期|流量|更新|验证|剩余|频道|长期|推广|分享|周期|我的'
+  header:
+      User-Agent:
+      - "ClashMetaForAndroid/2.11.2.Meta"
+
+# 订阅地址相关
+proxy-providers:
+  proxy1:
+    <<: *p
+    path: ./proxy_provider/proxy1.yaml
+    url: ""
+  
+
+
+# 节点记忆
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+# 时间校准
+ntp:
+  enable: true
+  write-to-system: true
+  server: ntp.ntsc.ac.cn
+  port: 123
+  interval: 60
+
+# 嗅探模块
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+    TLS:
+      ports: [443, 5228, 8443]
+    QUIC:
+      ports: [443, 8443]
+  force-domain:
+    - "+.v2ex.com"
+  skip-domain: # 如遇需内部通信的应用请放行该域名
+    - "Mijia Cloud"
+
+# 网卡模块
+tun:
+  exclude-uid: []
+  enable: true  # true 开 # false 默认关
+  device: Meta
+  stack: gvisor
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  udp-timeout: 300
+  auto-route: true
+  strict-route: true
+  auto-redirect: false
+  auto-detect-interface: true
+  exclude-package:
+
+# DNS模块
+dns:
+  enable: true
+  ipv6: false
+  cache-algorithm: arc
+  prefer-h3: true
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fdfe:dcba:9876::1/64
+  fake-ip-filter:
+    - "RULE-SET:CN_域"
+    - "RULE-SET:Fake-IP-Filter"
+  default-nameserver:
+    - 223.5.5.5
+    - 1.12.12.12
+    - 8.8.8.8
+    - 1.0.0.1
+  direct-nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  proxy-server-nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  nameserver-policy:
+    "RULE-SET:CN_域":
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
+  nameserver:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+
+# 特殊代理节点定义
+proxies:
+  - {name: 🇨🇳 本地直连, type: direct, udp: true}
+  - {name: ⛔ 拒绝连接, type: reject}
+  - {name: 🌐 DNS_Hijack, type: dns}
+
+
+# 代理组配置
+proxy-groups:
+  - name: 总模式
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/Main.png"
+    type: select
+    proxies:
+      - 香港节点
+      - 台湾节点
+      - 狮城节点
+      - 日本节点
+      - 美国节点
+      - 手动选择
+
+  - name: 漏网之鱼
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/LWZY.png"
+    type: select
+    proxies:
+      - 总模式
+      - 🇨🇳 本地直连
+  # -------- 地区节点分组 --------
+  - name: 手动选择
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/Select.png"
+    type: select
+    include-all-providers: true
+  
+  - name: 狮城节点
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/Singapore.png"
+    filter: "^(?=.*(新加坡|坡|狮城|SG|Singapore)).*$"
+    type: url-test
+    include-all-providers: true
+
+  - name: 美国节点
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/UnitedStates.png"
+    filter: "^(?=.*(美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|America|US|United States)).*$"
+    type: url-test
+    include-all-providers: true
+
+  - name: 香港节点
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/HongKong.png"
+    filter: "^(?=.*(港|HK|hk|Hong Kong|HongKong|hongkong)).*$"
+    type: url-test
+    include-all-providers: true
+
+  - name: 日本节点
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/Japan.png"
+    filter: "^(?=.*(日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan)).*$"
+    type: url-test
+    include-all-providers: true
+
+  - name: 台湾节点
+    icon: "https://v6.gh-proxy.com/https://github.com/musiyun124/mihomo/raw/refs/heads/main/icon2/Taiwan.png"
+    filter: "^(?=.*(台|新北|彰化|TW|Taiwan)).*$"
+    type: url-test
+    include-all-providers: true
+
+# ============ 规则集锚点定义 ============
+rule-anchor:
+  Local: &Local
+    {type: file, behavior: classical, format: text}
+  YAML: &YAML
+    {type: http, behavior: classical, format: yaml, interval: 86400}
+  Classical: &Classical
+    {type: http, behavior: classical, format: text, interval: 86400}
+  IPCIDR: &IPCIDR
+    {type: http, behavior: ipcidr, format: mrs, interval: 86400}
+  Domain: &Domain
+    {type: http, behavior: domain, format: mrs, interval: 86400}
+
+# ============ 规则集配置 ============
+rule-providers:
+
+  Fake-IP-Filter:
+    <<: *Domain
+    path: ./rules/Fake-IP-Filter.mrs
+    url: "https://v6.gh-proxy.com/https://github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/fakeip-filter.mrs"
+
+  CN_IP:
+    <<: *IPCIDR
+    path: ./rules/CN_IP.mrs
+    url: "https://v6.gh-proxy.com/https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cn.mrs"
+  CN_域:
+    <<: *Domain
+    path: ./rules/CN_域.mrs
+    url: "https://v6.gh-proxy.com/https://github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/cn.mrs"
+
+
+  Private_域:
+    <<: *Domain
+    path: ./rules/LAN.mrs
+    url: "https://v6.gh-proxy.com/https://github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/private.mrs"
+  Private_IP:
+    <<: *IPCIDR
+    path: ./rules/Private_IP.mrs
+    url: "https://v6.gh-proxy.com/https://github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/privateip.mrs"
+
+# ============ 路由规则 ============
+# 规则优先级：从上到下依次匹配，命中即停止
+rules:
+  # -------- DNS 相关规则 --------
+  - DST-PORT,53,🌐 DNS_Hijack
+
+
+  # -------- 本地网络规则 --------
+  - RULE-SET,Private_域,🇨🇳 本地直连
+  - RULE-SET,Private_IP,🇨🇳 本地直连,no-resolve
+
+  # -------- 中国大陆规则 --------
+  - DOMAIN,browserleaks.com,漏网之鱼
+  - RULE-SET,CN_域,🇨🇳 本地直连
+  - RULE-SET,CN_IP,🇨🇳 本地直连
+  - DOMAIN-KEYWORD,v6.gh-proxy,🇨🇳 本地直连
+
+  # 兜底规则
+  - MATCH,漏网之鱼
